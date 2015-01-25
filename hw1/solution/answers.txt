@@ -24,4 +24,16 @@ Number | Name | Callee Save? | Use
 
 b) Define how the stack is accessed.  What does the stack pointer point to? In which way does the stack grow in terms of memory addresses?
 
+The stack has the following structure:
++Local Variables
++Saved s Registers
++Return Address
++Additional Return Values
++Additional Parameters
++Saved t Registers
+
+The stack pointer points to the current top of the stack, or the top of the highest activation stack frame.  The stack grows in term of decreasing memory addresses.  This done so that a program would write over it's own data, and not that of another program's.  For example, the base of the stack might be x4000, and an activation frame would proceed to x399F, then x399E, etc.
+
 c)  Define the mechanics of the call, including what the caller does to initate a procedure call, what the callee does at the beginning of a procedure, what the callee does at the end of a procedure to return to the caller, and what teh caller does to clean up after the procedurer returned.
+
+To initiate a call, the caller must ensure that its state is preserved.  It passes the parameters to the callee and saves the return address.  Control is then passed to the callee.  Space is allocated for the callee's local variables.  After the callee performs its tasks, the return values are preserved for access by the caller.  The callee then returns control to the caller.
