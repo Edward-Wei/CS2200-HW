@@ -1,0 +1,27 @@
+Philip Bale
+Group 1
+
+a) Define how registers are used.  Which registers are used for what? (Specify ALL registers, including those that are not used)
+
+Number | Name | Callee Save? | Use
+00 | $zero | NA  | Always Zero
+01 | $at   | NA  | Reserved for Assembler
+02 | $v0   | No  | Return Value
+03 | $a0   | No  | Argument 1
+04 | $a1   | No  | Argument 2
+05 | $a2   | No  | Argument 3
+06 | $to   | No  | Temporary Variable
+07 | $t1   | No  | Temporary Variable
+08 | $t2   | No  | Temporary Variable
+09 | $s0   | Yes  | Saved Register
+10 | $s1   | Yes  | Saved Register
+11 | $s2   | Yes  | Saved Register
+12 | $k0   | NA  | Reserved for OS and Traps
+13 | $sp   | No  | Stack Pointer
+14 | $fp   | Yes | Frame Pointer
+15 | $ra   | No  | Return Address
+
+
+b) Define how the stack is accessed.  What does the stack pointer point to? In which way does the stack grow in terms of memory addresses?
+
+c)  Define the mechanics of the call, including what the caller does to initate a procedure call, what the callee does at the beginning of a procedure, what the callee does at the end of a procedure to return to the caller, and what teh caller does to clean up after the procedurer returned.
