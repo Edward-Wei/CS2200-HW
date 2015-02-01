@@ -32,7 +32,7 @@ The stack has the following structure:
 +Additional Parameters
 +Saved t Registers
 
-The stack pointer points to the current top of the stack, or the top of the highest activation stack frame.  The stack grows in term of decreasing memory addresses.  This done so that a program would write over it's own data, and not that of another program's.  For example, the base of the stack might be x4000, and an activation frame would proceed to x399F, then x399E, etc.
+The stack pointer points to the current top of the stack, or the top of the highest activation stack frame.  The stack grows in term of decreasing memory addresses. For example, the base of the stack might be x4000, and an activation frame would proceed to x399F, then x399E, etc.
 
 c)  Define the mechanics of the call, including what the caller does to initate a procedure call, what the callee does at the beginning of a procedure, what the callee does at the end of a procedure to return to the caller, and what teh caller does to clean up after the procedurer returned.
 
