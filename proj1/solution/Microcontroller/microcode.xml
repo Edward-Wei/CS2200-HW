@@ -15,7 +15,6 @@
 		<Signal name = "ALULo"/>
 		<Signal name = "ALUHi"/>
 		<Signal name = "LdPC"/>
-		<Signal name = "OPTest"/>
 	</State>
 	<State name="ADD0">
 		<Signal name = "DrREG"/>
