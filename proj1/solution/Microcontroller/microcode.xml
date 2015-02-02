@@ -1,5 +1,5 @@
 <Microcode>
-	<State name="FETCH0" onZ="false">
+	<State name="FETCH0">
 		<Signal name = "DrPC"/>
 		<Signal name = "LdA"/>
 		<Signal name = "LdMAR"/>
@@ -16,6 +16,8 @@
 		<Signal name = "ALUHi"/>
 		<Signal name = "LdPC"/>
 	</State>
+
+
 	<State name="ADD0">
 		<Signal name = "DrREG"/>
 		<Signal name = "RegSelLo"/>
@@ -33,6 +35,7 @@
 		<Signal name = "WrREG"/>
 		<Goto state="FETCH0"/>
 	</State>
+
 	<State name="ADDI0">
 		<Signal name = "DrREG"/>
 		<Signal name = "RegSelLo"/>		
@@ -48,7 +51,8 @@
 		<Signal name = "DrALU"/>
 		<Signal name = "WrREG"/>
 		<Goto state="FETCH0"/>
-	</State>
+	</State> 
+
 	<State name="NAND0">
 		<Signal name = "DrREG"/>
 		<Signal name = "RegSelLo"/>
@@ -64,10 +68,10 @@
 	<State name="NAND2">
 		<Signal name = "DrALU"/>
 		<Signal name = "ALULo"/>
-		<Signal name = "ALUHi"/>
 		<Signal name = "WrREG"/>
 		<Goto state="FETCH0"/>
 	</State>
+
 	<State name="LW0">
 		<Signal name = "DrREG"/>
 		<Signal name = "RegSelLo"/>		
@@ -89,6 +93,7 @@
 		<Signal name = "WrREG"/>
 		<Goto state="FETCH0"/>
 	</State>
+
 	<State name="SW0">
 		<Signal name = "DrREG"/>
 		<Signal name = "RegSelLo"/>
@@ -110,37 +115,43 @@
 		<Signal name = "WrMEM"/>
 		<Goto state="FETCH0"/>
 	</State>
+
 	<State name="BEQ0">
-		<Signal name = "DrREG"/>
-		<Signal name = "LdA"/>
+		<Signal name="DrREG"/>
+		<Signal name="LdA"/>
 		<Goto state="BEQ1"/>
 	</State>
 	<State name="BEQ1">
-		<Signal name = "DrREG"/>
-		<Signal name = "RegSelLo"/>		
-		<Signal name = "LdB"/>
+		<Signal name="DrREG"/>
+		<Signal name="RegSelLo"/>
+		
+		<Signal name="LdB"/>
 		<Goto state="BEQ2"/>
 	</State>
 	<State name="BEQ2">
-		<Signal name = "DrALU"/>
-		<Signal name = "ALUHi"/>
-		<Signal name = "LdZ"/>
+		<Signal name="DrALU"/>
+		<Signal name="ALUHi"/>
+		<Signal name="LdZ"/>
 	</State>
-	<State name="BEQ3">
-		<Signal name = "DrPC"/>
-		<Signal name = "LdA"/>
-		<Signal name = "chkZ"/>
+	<State name="BEQ3" onZ="true">
+		<Signal name="DrPC"/>
+		<Signal name="LdA"/>
+		<Goto state="BEQ4"/>
 	</State>
-	<State name="BEQ4" onZ="true">
-		<Signal name = "DrOFF"/>
-		<Signal name = "LdB"/>
+	<State name="BEQ4">
+		<Signal name="DrOFF"/>
+		<Signal name="LdB"/>
 		<Goto state="BEQ5"/>
 	</State>
 	<State name="BEQ5">
-		<Signal name = "DrALU"/>
-		<Signal name = "LdPC"/>
+		<Signal name="DrALU"/>
+		<Signal name="LdPC"/>
 		<Goto state="FETCH0"/>
 	</State>
+	<State name="BEQ6" onZ="false">
+		<Goto state="FETCH0"/>
+	</State>
+
 	<State name="JALR0">
 		<Signal name = "DrPC"/>
 		<Signal name = "RegSelLo"/>
@@ -150,8 +161,8 @@
 	<State name="JALR1">
 		<Signal name = "DrREG"/>
 		<Signal name = "LdPC"/>
-		<Goto state="FETCH0"/>
 	</State>
+
 	<State name="HALT0">
 		<Goto state="HALT0"/>
 	</State>
