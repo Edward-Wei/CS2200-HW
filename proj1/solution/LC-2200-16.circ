@@ -1801,10 +1801,10 @@ This file is intended to be loaded by Logisim (http://www.cburch.com/logisim/).
       <a name="addrWidth" val="6"/>
       <a name="dataWidth" val="25"/>
       <a name="contents">addr/data: 6 25
-6201 1082 e00900 84044 108045 20100 84047 8408
-20100 8404a 10804b 620100 8404d 840e 210f 20080
-84051 8412 2113 40040 4055 88056 410100 1004200
-8419 900 a021b 840 1c
+6201 1082 600900 84044 108045 20100 84047 8408
+20100 8404a 10804b 220100 8404d 840e 210f 20080
+84051 8412 2113 40040 4055 88056 410100 4218
+8419 900 0 a021c 840 1d
 </a>
     </comp>
     <comp lib="0" loc="(710,290)" name="Clock">
@@ -1869,7 +1869,7 @@ This file is intended to be loaded by Logisim (http://www.cburch.com/logisim/).
       <a name="addrWidth" val="2"/>
       <a name="dataWidth" val="6"/>
       <a name="contents">addr/data: 2 6
-0 18
+1a 17
 </a>
     </comp>
     <comp lib="0" loc="(260,300)" name="Tunnel">
@@ -1928,7 +1928,7 @@ This file is intended to be loaded by Logisim (http://www.cburch.com/logisim/).
       <a name="addrWidth" val="3"/>
       <a name="dataWidth" val="6"/>
       <a name="contents">addr/data: 3 6
-3 9 6 c 10 14 1a 1c
+3 9 6 c 10 14 1b 1d
 </a>
     </comp>
     <comp lib="0" loc="(480,220)" name="Tunnel">
