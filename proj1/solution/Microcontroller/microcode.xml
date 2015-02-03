@@ -1,5 +1,5 @@
 <Microcode>
-	<State name="FETCH0">
+	<State name="FETCH0" onZ="false">
 		<Signal name = "DrPC"/>
 		<Signal name = "LdA"/>
 		<Signal name = "LdMAR"/>
@@ -149,10 +149,6 @@
 		<Signal name="LdPC"/>
 		<Goto state="FETCH0"/>
 	</State>
-	<State name="BEQ6" onZ="false">
-		<Goto state="FETCH0"/>
-	</State>
-
 	<State name="JALR0">
 		<Signal name = "DrPC"/>
 		<Signal name = "RegSelLo"/>

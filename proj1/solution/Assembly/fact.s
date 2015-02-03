@@ -16,7 +16,7 @@ main:       la $sp, stack		! load address of stack label into $sp
             noop                        ! FIXME: load desired value of the stack 
                                         ! (defined at the label below) into $sp
             la $at, factorial	        ! load address of factorial label into $at
-            addi $a0, $zero, 5          ! $a0 = 5, the number to factorialize
+            addi $a0, $zero, 1          ! $a0 = 5, the number to factorialize
             jalr $at, $ra		  		! jump to factorial, set $ra to return addr
             halt						! when we return, just halt
 
