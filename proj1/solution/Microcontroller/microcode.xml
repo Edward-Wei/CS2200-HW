@@ -15,8 +15,8 @@
 		<Signal name = "ALULo"/>
 		<Signal name = "ALUHi"/>
 		<Signal name = "LdPC"/>
+		<Signal name = "OPTest" />
 	</State>
-
 
 	<State name="ADD0">
 		<Signal name = "DrREG"/>
@@ -132,6 +132,7 @@
 		<Signal name="DrALU"/>
 		<Signal name="ALUHi"/>
 		<Signal name="LdZ"/>
+		<Signal name="chkZ"/>
 	</State>
 	<State name="BEQ3" onZ="true">
 		<Signal name="DrPC"/>
