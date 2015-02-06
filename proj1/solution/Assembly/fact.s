@@ -19,7 +19,6 @@ main:       la $sp, stack		! load address of stack label into $sp
             addi $a0, $zero, 1          ! $a0 = 5, the number to factorialize
             jalr $at, $ra		  		! jump to factorial, set $ra to return addr
             halt						! when we return, just halt
-
 addOne:		addi $a0, $a0, 1			! fact(0) = 1
 			beq $zero, $zero, eval 		! proceed as normal
 
