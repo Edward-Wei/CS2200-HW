@@ -1,6 +1,6 @@
 <Microcode>
 <!--FetchMacroState -->
-	<State name="FETCH0" onZ="false">
+	<!--<State name="FETCH0" onZ="false">
 		<Signal name="DrPC"/>
 		<Signal name="LdA"/>
 		<Signal name="LdMAR"/>
@@ -17,6 +17,46 @@
 		<Signal name="DrALU"/>
 		<Signal name="LdPC"/>
 		<Signal name="OPTest"/>
+	</State>-->
+	<State name="FETCH0" onZ="false">
+		<Signal name="chkZ"/>
+		<Signal name="OpTest"/>
+	</State>
+	<State name="FETCH1" onInt="false">
+		<Signal name="DrPC"/>
+		<Signal name="LdA"/>
+		<Signal name="LdMAR"/>
+		<Signal name="FETCH2"/>
+	</State>
+	<State name="FETCH2" onInt="false">
+		<Signal name="DrMEM"/>
+		<Signal name="LdIR"/>
+		<Goto state="FETCH2"/>
+	</State>
+	<State name="FETCH3">
+		<Signal name="ALULo"/>
+		<Signal name="ALUHi"/>
+		<Signal name="DrALU"/>
+		<Signal name="LdPC"/>
+		<Signal name="OPTest"/>
+	</State>
+	<State name="FETCH4" onInt="true">
+		<Signal name="DrPC"/>
+		<Signal name="WrREG"/>
+		<Signal name="RegSelHi"/>
+		<Signal name="RegSelLo"/>
+		<Signal name="LdEnInt"/>
+		<Goto state="FETCH5"/>
+	</State>
+	<State name="FETCH5" onInt="true">
+		<Signal name="LdMAR"/>
+		<Signal name="IntAck"/>
+		<Goto state="FETCH6"/>
+	</State>
+	<State name="FETCH6">
+		<Signal name="DrMEM"/>
+		<Signal name="LdPC"/>
+		<Goto state="FETCH1"/>
 	</State>
 <!--Add(0000)-->
 	<State name="ADD0">
@@ -28,7 +68,7 @@
 	<State name="ADD1">
 		<Signal name="LdB"/>
 		<Signal name="DrReg"/>
-		<Signal name = "RegSelHi"/>
+		<Signal name="RegSelHi"/>
 		<Goto state="ADD2"/>
 	</State>
 	<State name="ADD2">
@@ -164,8 +204,44 @@
 		<Signal name="DrReg"/>
 		<Goto state="FETCH0"/>
 	</State>
+
+<!--ei(1010)-->
+	<State name="EI0">
+		<Signal name="DrEnInt"/>
+		<Signal name="LdEnInt"/>
+		<GoTo state="FETCH0"/>
+	</State>
+<!--di(1011)-->
+	<State name="DI0">
+		<Signal name="LdEnInt"/>
+		<GoTo state="FETCH0"/>
+	</State>
+<!--reti(1100)--> 
+	<State name="RETI0">
+		<Signal name="DrReg"/>
+		<Signal name="LdPC"/>
+		<Signal name="RegSelHi"/>
+		<Signal name="RegSelLo"/>
+		<GoTo state="EIO"/>
+	</State>
 <!--Halt(0111)-->
 	<State name="HALT0">
 		<Goto state="HALT0"/>
+	</State>
+<!--bonr(1000)-->
+	<State name="BONR0">
+		<Goto state="FETCH0"/>
+	</State>
+<!--bono(1001)-->
+	<State name="BONO0">
+		<Goto state="FETCH0"/>
+	</State>
+<!--boni(1101)-->
+	<State name="BONI0">
+		<Goto state="FETCH0"/>
+	</State>
+<!--bonj(1110)-->
+	<State name="BONJ0">
+		<Goto state="FETCH0"/>
 	</State>
 </Microcode>
