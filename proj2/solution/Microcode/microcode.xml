@@ -26,12 +26,12 @@
 		<Signal name="DrPC"/>
 		<Signal name="LdA"/>
 		<Signal name="LdMAR"/>
-		<Signal name="FETCH2"/>
+		<Goto state="FETCH2"/>
 	</State>
 	<State name="FETCH2" onInt="false">
 		<Signal name="DrMEM"/>
 		<Signal name="LdIR"/>
-		<Goto state="FETCH2"/>
+		<Goto state="FETCH3"/>
 	</State>
 	<State name="FETCH3">
 		<Signal name="ALULo"/>
@@ -222,7 +222,7 @@
 		<Signal name="LdPC"/>
 		<Signal name="RegSelHi"/>
 		<Signal name="RegSelLo"/>
-		<GoTo state="EIO"/>
+		<GoTo state="EI0"/>
 	</State>
 <!--Halt(0111)-->
 	<State name="HALT0">
