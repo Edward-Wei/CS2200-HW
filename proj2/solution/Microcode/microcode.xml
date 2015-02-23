@@ -18,45 +18,41 @@
 		<Signal name="LdPC"/>
 		<Signal name="OPTest"/>
 	</State>-->
-	<State name="FETCH0" onZ="false">
-		<Signal name="chkZ"/>
-		<Signal name="OpTest"/>
-	</State>
-	<State name="FETCH1" onInt="false">
+	<State name="FETCH0" onZ="false" onInt="false"> 
 		<Signal name="DrPC"/>
 		<Signal name="LdA"/>
 		<Signal name="LdMAR"/>
-		<Goto state="FETCH2"/>
+		<Goto state="FETCH1"/>
 	</State>
-	<State name="FETCH2" onInt="false">
+	<State name="FETCH1">
 		<Signal name="DrMEM"/>
 		<Signal name="LdIR"/>
-		<Goto state="FETCH3"/>
+		<Goto state="FETCH2"/>
 	</State>
-	<State name="FETCH3">
+	<State name="FETCH2">
 		<Signal name="ALULo"/>
 		<Signal name="ALUHi"/>
 		<Signal name="DrALU"/>
 		<Signal name="LdPC"/>
 		<Signal name="OPTest"/>
 	</State>
-	<State name="FETCH4" onInt="true">
+	<State name="FETCH3" onInt="true">
 		<Signal name="DrPC"/>
 		<Signal name="WrREG"/>
 		<Signal name="RegSelHi"/>
 		<Signal name="RegSelLo"/>
 		<Signal name="LdEnInt"/>
-		<Goto state="FETCH5"/>
+		<Goto state="FETCH4"/>
 	</State>
-	<State name="FETCH5" onInt="true">
+	<State name="FETCH4">
 		<Signal name="LdMAR"/>
 		<Signal name="IntAck"/>
-		<Goto state="FETCH6"/>
+		<Goto state="FETCH5"/>
 	</State>
-	<State name="FETCH6">
+	<State name="FETCH5">
 		<Signal name="DrMEM"/>
 		<Signal name="LdPC"/>
-		<Goto state="FETCH1"/>
+		<Goto state="FETCH0"/>
 	</State>
 <!--Add(0000)-->
 	<State name="ADD0">

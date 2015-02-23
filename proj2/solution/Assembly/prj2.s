@@ -41,12 +41,10 @@ main:           la $sp, stack           ! Initialize stack pointer
                 lw $sp, 0($sp)          
                 
                 ! Install timer interrupt handler into vector table
-                           ! FIX ME
                 
-                addi $a0, $zero, ti_inthandler ! $t0 <-int_handler 
-                addi $a1, $zero, 1
-                sw $a0, 0($a1)
-
+                la $ra, vector0
+                la $at, ti_inthandler
+                sw $at, 1($ra)
 
                 ei                      ! Don't forget to enable interrupts...
 
@@ -97,62 +95,81 @@ factorial:      addi    $sp, $sp, -1    ! push RA
                 addi    $sp, $sp, 1
                 jalr    $ra, $zero
 
-ti_inthandler:
-    addi $sp, $sp, 14 ! make space for registers
-    sw $at, 0($sp) ! save all registers
-    sw $v0, -1($sp)
-    sw $a0, -2($sp)
-    sw $a1, -3($sp)
-    sw $a2, -4($sp)
-    sw $a3, -5($sp)
-    sw $a4, -6($sp)
-    sw $s0, -7($sp)
-    sw $s1, -8($sp)
-    sw $s2, -9($sp)
-    sw $s3, -10($sp)
-    sw $k0, -11($sp)
-    sw $fp, -12($sp)
-    sw $ra, -13($sp)
-    ei
-    addi $a2, $zero, seconds
-    lw $a0, 0($a2) ! load seconds into $a0
-    addi $a0, $a0, 1
-    addi $a1, $zero, 60 ! set $t1 to 60 (to check for minutes)
-    beq $a0, $a1, MINUTE    ! go to minutes if needed
-    sw $a0, 0($a2)      ! save the seconds
-    beq $zero, $zero, EXIT
+ti_inthandler:  addi $sp, $sp, 14 ! make space for registers
+                sw $at, 0($sp) ! save all registers
+                sw $v0, -1($sp)
+                sw $a0, -2($sp)
+                sw $a1, -3($sp)
+                sw $a2, -4($sp)
+                sw $a3, -5($sp)
+                sw $a4, -6($sp)
+                sw $s0, -7($sp)
+                sw $s1, -8($sp)
+                sw $s2, -9($sp)
+                sw $s3, -10($sp)
+                sw $k0, -11($sp)
+                sw $fp, -12($sp)
+                sw $ra, -13($sp)
+                ei
 
-MINUTE: add $a0, $zero, $zero   ! set the seconds to 0
-    sw $a0, 0($a2)      ! save the seconds
-    lw $a0, 1($a2)      ! get the number of minutes
-    addi $a0, $a0, 1    ! increment the minutes
-    beq $a0, $a1, HOUR  ! go to hours if needed
-    sw $a0, 1($a2)      ! save the minutes
-    beq $zero, $zero, EXIT
-    
-HOUR:   add $a0, $zero, $zero   ! set the minutes to 0
-    sw $a0, 1($a2)      ! save the minutes
-    lw $a0, 2($a2)      ! get the number of hours
-    addi $a0, $a0, 1    ! increment the hours 
-    sw $a0, 2($a2)      ! save the hours
+                !store constants
+                addi $a0, $zero, 24
+                addi $a1, $zero, 60
 
-EXIT:   lw $at, 0($sp)      ! load all of the registers back
-    lw $v0, -1($sp)
-    lw $a0, -2($sp)
-    lw $a1, -3($sp)
-    lw $a2, -4($sp)
-    lw $a3, -5($sp)
-    lw $a4, -6($sp)
-    lw $s0, -7($sp)
-    lw $s1, -8($sp)
-    lw $s2, -9($sp)
-    lw $s3, -10($sp)
-    lw $k0, -11($sp)
-    lw $fp, -12($sp)
-    lw $ra, -13($sp)
-    addi $sp, $sp, -14  ! set the stack pointer back to where it was
-    reti            ! go back to the program
+                la $s0, seconds
+                lw $s0, 0($s0)
+                lw $a2, 0($s0)
 
+                la $s1, minutes
+                lw $s1, 0($s1)
+                lw $a3, 0($s1)
+
+                la $s2, hours
+                lw $s2, 0($s2)
+                lw $a4, 0($s2)
+
+                addi $a2, $a2, 1
+                beq $a1, $a2, reset_seconds
+                beq $zero, $zero, cont_hours
+
+cont_seconds:   addi $a3, $a3, 1
+                beq $a1, $a3, reset_minutes
+                beq $zero, $zero, cont_hours
+
+cont_minutes:   addi $a4, $a4, 1
+                beq $a0, $a4, reset_hours
+
+cont_hours:     sw $a2, 0($s0)
+                sw $a3, 0($s1)
+                sw $a4, 0($s2)
+
+                
+                lw $at, 0($sp) ! save all registers
+                lw $v0, -1($sp)
+                lw $a0, -2($sp)
+                lw $a1, -3($sp)
+                lw $a2, -4($sp)
+                lw $a3, -5($sp)
+                lw $a4, -6($sp)
+                lw $s0, -7($sp)
+                lw $s1, -8($sp)
+                lw $s2, -9($sp)
+                lw $s3, -10($sp)
+                lw $k0, -11($sp)
+                lw $fp, -12($sp)
+                lw $ra, -13($sp)
+                addi $sp, $sp, -14 ! return sp
+                reti
+
+reset_seconds:
+                add $a2, $zero, $zero
+                beq $zero, $zero, cont_seconds
+reset_minutes:
+                add $a3, $zero, $zero
+                beq $zero, $zero, cont_minutes
+reset_hours:
+                add $a4, $zero, $zero
+                beq $zero, $zero, cont_hours
 
 stack:      .fill 0xA00000
 seconds:    .fill 0xFFFFFC
