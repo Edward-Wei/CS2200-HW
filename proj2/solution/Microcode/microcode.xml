@@ -18,7 +18,7 @@
 		<Signal name="LdPC"/>
 		<Signal name="OPTest"/>
 	</State>-->
-	<State name="FETCH0" onZ="false" onInt="false"> 
+	<State name="FETCH0" onZ="false" onInt="false">
 		<Signal name="DrPC"/>
 		<Signal name="LdA"/>
 		<Signal name="LdMAR"/>
@@ -30,17 +30,17 @@
 		<Goto state="FETCH2"/>
 	</State>
 	<State name="FETCH2">
-		<Signal name="ALULo"/>
-		<Signal name="ALUHi"/>
 		<Signal name="DrALU"/>
 		<Signal name="LdPC"/>
+		<Signal name="ALULo"/>
+		<Signal name="ALUHi"/>
 		<Signal name="OPTest"/>
-	</State>
-	<State name="FETCH3" onInt="true">
+	</State> 
+	<State name="FETCH3" onInt="true">  
 		<Signal name="DrPC"/>
-		<Signal name="WrREG"/>
-		<Signal name="RegSelHi"/>
 		<Signal name="RegSelLo"/>
+		<Signal name="RegSelHi"/>
+		<Signal name="WrREG"/>
 		<Signal name="LdEnInt"/>
 		<Goto state="FETCH4"/>
 	</State>
@@ -54,6 +54,7 @@
 		<Signal name="LdPC"/>
 		<Goto state="FETCH0"/>
 	</State>
+
 <!--Add(0000)-->
 	<State name="ADD0">
 		<Signal name="LdA"/>
@@ -64,13 +65,14 @@
 	<State name="ADD1">
 		<Signal name="LdB"/>
 		<Signal name="DrReg"/>
-		<Signal name="RegSelHi"/>
+		<Signal name = "RegSelHi"/>
 		<Goto state="ADD2"/>
 	</State>
 	<State name="ADD2">
 		<Signal name="WrREG"/>
 		<Signal name="DrALU"/>
-		<Goto state="FETCH0"/>
+		<Signal name="OPTest"/>
+		<Signal name="chkZ"/>
 	</State>
 <!--NAND(0001)-->
 	<State name="NAND0">
@@ -89,7 +91,8 @@
 		<Signal name="WrREG"/>
 		<Signal name="DrALU"/>
 		<Signal name="ALULo"/>
-		<Goto state="FETCH0"/>
+		<Signal name="OPTest"/>
+		<Signal name="chkZ"/>
 	</State>
 <!--Addi(0010)-->
 	<State name="ADDI0">
@@ -106,7 +109,8 @@
 	<State name="ADDI2">
 		<Signal name="WrREG"/>
 		<Signal name="DrALU"/>
-		<Goto state="FETCH0"/>
+		<Signal name="OPTest"/>
+		<Signal name="chkZ"/>
 	</State>
 <!--lw(0011)-->
 	<State name="LW0">
@@ -128,7 +132,8 @@
 	<State name="LW3">
 		<Signal name="DrMEM"/>
 		<Signal name="WrREG"/>
-		<Goto state="FETCH0"/>
+		<Signal name="OPTest"/>
+		<Signal name="chkZ"/>
 	</State>
 <!--sw(0100)-->
 	<State name="SW0">
@@ -149,8 +154,9 @@
 	</State>
 	<State name="SW3">
 		<Signal name="WrMEM"/>
-		<Signal name="DrREG"/>
-		<Goto state="FETCH0"/>
+		<Signal name="DrReg"/>
+		<Signal name="OPTest"/>
+		<Signal name="chkZ"/>
 	</State>
 <!--beq(0101)-->
 	<State name="BEQ0">
@@ -186,7 +192,8 @@
 	<State name="BEQ6">
 		<Signal name="DrALU"/>
 		<Signal name="LdPC"/>
-		<Goto state="FETCH0"/>
+		<Signal name="OPTest"/>
+		<Signal name="chkZ"/>
 	</State>
 <!--jalr(0110)-->
 	<State name="JALR0">
@@ -198,46 +205,36 @@
 	<State name="JALR1">
 		<Signal name="LdPC"/>
 		<Signal name="DrReg"/>
-		<Goto state="FETCH0"/>
-	</State>
-
-<!--ei(1010)-->
-	<State name="EI0">
-		<Signal name="DrEnInt"/>
-		<Signal name="LdEnInt"/>
-		<GoTo state="FETCH0"/>
-	</State>
-<!--di(1011)-->
-	<State name="DI0">
-		<Signal name="LdEnInt"/>
-		<GoTo state="FETCH0"/>
-	</State>
-<!--reti(1100)--> 
-	<State name="RETI0">
-		<Signal name="DrReg"/>
-		<Signal name="LdPC"/>
-		<Signal name="RegSelHi"/>
-		<Signal name="RegSelLo"/>
-		<GoTo state="EI0"/>
+		<Signal name="OPTest"/>
+		<Signal name="chkZ"/>
 	</State>
 <!--Halt(0111)-->
 	<State name="HALT0">
 		<Goto state="HALT0"/>
 	</State>
-<!--bonr(1000)-->
-	<State name="BONR0">
+<!--ei(1010)-->
+	<State name="EI0">
+		<Signal name="LdEnInt"/>
+		<Signal name="DrEnInt"/>
 		<Goto state="FETCH0"/>
 	</State>
-<!--bono(1001)-->
-	<State name="BONO0">
+<!--di(1011)-->
+	<State name="DI0">
+		<Signal name="LdEnInt"/>
 		<Goto state="FETCH0"/>
 	</State>
-<!--boni(1101)-->
-	<State name="BONI0">
-		<Goto state="FETCH0"/>
+<!--reti(1100)-->
+	<State name="RETI0">
+		<Signal name="DrReg"/>
+		<Signal name="RegSelLo"/>
+		<Signal name="RegSelHi"/>
+		<Signal name="LdPC"/>
+		<Goto state="EI0"/>
 	</State>
-<!--bonj(1110)-->
-	<State name="BONJ0">
-		<Goto state="FETCH0"/>
-	</State>
+
+	<State name="BONR0"/>
+	<State name="BONO0"/>
+	<State name="BONI0"/>
+	<State name="BONJ0"/>
+
 </Microcode>

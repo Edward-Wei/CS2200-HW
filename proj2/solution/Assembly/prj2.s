@@ -41,7 +41,6 @@ main:           la $sp, stack           ! Initialize stack pointer
                 lw $sp, 0($sp)          
                 
                 ! Install timer interrupt handler into vector table
-                
                 la $ra, vector0
                 la $at, ti_inthandler
                 sw $at, 1($ra)
@@ -95,7 +94,7 @@ factorial:      addi    $sp, $sp, -1    ! push RA
                 addi    $sp, $sp, 1
                 jalr    $ra, $zero
 
-ti_inthandler:  addi $sp, $sp, -14 ! make space for registers
+ti_inthandler:  addi $sp, $sp, -14 ! space for registers
                 sw $at, 0($sp) ! save all registers
                 sw $v0, 1($sp)
                 sw $a0, 2($sp)
@@ -117,14 +116,15 @@ ti_inthandler:  addi $sp, $sp, -14 ! make space for registers
                 addi $a1, $zero, 60
 
                 la $s0, seconds
+                la $s1, minutes
+                la $s2, hours
+
                 lw $s0, 0($s0)
                 lw $a2, 0($s0)
 
-                la $s1, minutes
                 lw $s1, 0($s1)
                 lw $a3, 0($s1)
 
-                la $s2, hours
                 lw $s2, 0($s2)
                 lw $a4, 0($s2)
 
@@ -139,11 +139,11 @@ cont_seconds:   addi $a3, $a3, 1
 cont_minutes:   addi $a4, $a4, 1
                 beq $a0, $a4, reset_hours
 
-cont_hours:     sw $a2, 0($s0)
+cont_hours:     sw $a2, 0($s0) ! save times
                 sw $a3, 0($s1)
                 sw $a4, 0($s2)
 
-                lw $at, 0($sp) ! save all registers
+                lw $at, 0($sp) ! save registers
                 lw $v0, 1($sp)
                 lw $a0, 2($sp)
                 lw $a1, 3($sp)
@@ -163,12 +163,15 @@ cont_hours:     sw $a2, 0($s0)
 reset_seconds:
                 add $a2, $zero, $zero
                 beq $zero, $zero, cont_seconds
+
 reset_minutes:
                 add $a3, $zero, $zero
                 beq $zero, $zero, cont_minutes
+
 reset_hours:
                 add $a4, $zero, $zero
                 beq $zero, $zero, cont_hours
+
 
 stack:      .fill 0xA00000
 seconds:    .fill 0xFFFFFC
