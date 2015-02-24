@@ -95,21 +95,21 @@ factorial:      addi    $sp, $sp, -1    ! push RA
                 addi    $sp, $sp, 1
                 jalr    $ra, $zero
 
-ti_inthandler:  addi $sp, $sp, 14 ! make space for registers
+ti_inthandler:  addi $sp, $sp, -14 ! make space for registers
                 sw $at, 0($sp) ! save all registers
-                sw $v0, -1($sp)
-                sw $a0, -2($sp)
-                sw $a1, -3($sp)
-                sw $a2, -4($sp)
-                sw $a3, -5($sp)
-                sw $a4, -6($sp)
-                sw $s0, -7($sp)
-                sw $s1, -8($sp)
-                sw $s2, -9($sp)
-                sw $s3, -10($sp)
-                sw $k0, -11($sp)
-                sw $fp, -12($sp)
-                sw $ra, -13($sp)
+                sw $v0, 1($sp)
+                sw $a0, 2($sp)
+                sw $a1, 3($sp)
+                sw $a2, 4($sp)
+                sw $a3, 5($sp)
+                sw $a4, 6($sp)
+                sw $s0, 7($sp)
+                sw $s1, 8($sp)
+                sw $s2, 9($sp)
+                sw $s3, 10($sp)
+                sw $k0, 11($sp)
+                sw $fp, 12($sp)
+                sw $ra, 13($sp)
                 ei
 
                 !store constants
@@ -143,22 +143,21 @@ cont_hours:     sw $a2, 0($s0)
                 sw $a3, 0($s1)
                 sw $a4, 0($s2)
 
-                
                 lw $at, 0($sp) ! save all registers
-                lw $v0, -1($sp)
-                lw $a0, -2($sp)
-                lw $a1, -3($sp)
-                lw $a2, -4($sp)
-                lw $a3, -5($sp)
-                lw $a4, -6($sp)
-                lw $s0, -7($sp)
-                lw $s1, -8($sp)
-                lw $s2, -9($sp)
-                lw $s3, -10($sp)
-                lw $k0, -11($sp)
-                lw $fp, -12($sp)
-                lw $ra, -13($sp)
-                addi $sp, $sp, -14 ! return sp
+                lw $v0, 1($sp)
+                lw $a0, 2($sp)
+                lw $a1, 3($sp)
+                lw $a2, 4($sp)
+                lw $a3, 5($sp)
+                lw $a4, 6($sp)
+                lw $s0, 7($sp)
+                lw $s1, 8($sp)
+                lw $s2, 9($sp)
+                lw $s3, 10($sp)
+                lw $k0, 11($sp)
+                lw $fp, 12($sp)
+                lw $ra, 13($sp)
+                addi $sp, $sp, 14 ! return sp
                 reti
 
 reset_seconds:
