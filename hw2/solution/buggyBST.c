@@ -11,7 +11,7 @@ node *root = NULL;
 void insert(node **tree, int val)
 {
     node *temp;
-    if((*tree))
+    if(!(*tree))
     {
         temp = (node *)malloc(sizeof(node));
         temp->left = temp->right = NULL;
@@ -22,7 +22,7 @@ void insert(node **tree, int val)
 
     if(val < (*tree)->data)
     {
-        insert((*tree)->left, val);
+        insert(&(*tree)->left, val);
     }
     else if(val > (*tree)->data)
     {
@@ -57,7 +57,7 @@ void print_postorder(node * tree)
     {
         print_postorder(tree->left);
         print_postorder(tree->right);
-        printf("%c\n",tree->data);
+        printf("%d\n",tree->data);
     }
 }
 
@@ -80,11 +80,11 @@ node* search(node ** tree, int val)
 
     if(val < (*tree)->data)
     {
-        search(((*tree)->left), val);
+        return search(&((*tree)->left), val);
     }
     else if(val > (*tree)->data)
     {
-        search(&((*tree)->right), val);
+        return search(&((*tree)->right), val);
     }
     else if(val == (*tree)->data)
     {
@@ -102,7 +102,7 @@ int main()
     insert(&root, 9);
     insert(&root, 4);
     insert(&root, 15);
-    insert(root, 6);
+    insert(&root, 6);
     insert(&root, 12);
     insert(&root, 17);
     insert(&root, 2);

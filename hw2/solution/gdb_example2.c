@@ -24,6 +24,8 @@ int main() {
     write_message(message);
 
     int *b;
+    int c;
+    b = &c;
     setint(b, 20);
     printf("%ld\n", *b);
     printf("This may or may not have crashed. You are lucky if you see this.");

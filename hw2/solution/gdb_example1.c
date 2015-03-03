@@ -3,10 +3,12 @@
 void print_scrambled(char *message)
 {
   int i = 3;
-  do {
-    printf("%c", (*message)+i);
-  } while (*++message);
-  printf("\n");
+  if (message != NULL) { 
+	  do {
+	    printf("%c", (*message)+i);
+	  } while (*++message);
+	  printf("\n");
+  }
 }
 
 int main()
