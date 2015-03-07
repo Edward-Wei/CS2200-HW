@@ -11,7 +11,7 @@ SIMULATOR = simulator-src
 CC      = gcc
 OPTIONS = -O2 -I$(STUDENT) -I$(SIMULATOR) # Production options
 #OPTIONS = -O0 -g -I$(STUDENT) -I$(SIMULATOR) # Debugging Options
-CFLAGS  = $(OPTIONS) -Wall -std=c99 -pedantic -pipe -Werror
+CFLAGS  = $(OPTIONS) -Wall -std=c99 -pedantic -pipe
 SUBMIT  = $(STUDENT) $(SIMULATOR) Makefile references
 
 STUDENT_OBJS = page-fault.o \
