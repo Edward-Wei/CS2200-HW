@@ -16,7 +16,7 @@
  * @param addr The virtual address.
  * @return     The virtual page number for this addres.
  */
-#define VADDR_PAGENUM(addr) ((addr) / page_size)
+#define VADDR_PAGENUM(addr) ((addr) >> page_size)
 
 /*******************************************************************************
  * Get the offset for a particular address.

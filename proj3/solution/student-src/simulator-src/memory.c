@@ -27,6 +27,7 @@ word_t mem_load(vaddr_t va) {
    word_t data;
 
    vpn = VADDR_PAGENUM(va);
+   
    pfn = tlb_lookup(vpn, 0);
    offset = VADDR_OFFSET(va);
    data = memory[pfn * page_size + offset];
@@ -51,6 +52,7 @@ void mem_store(vaddr_t va, word_t data) {
    pfn_t pfn, offset;
 
    vpn = VADDR_PAGENUM(va);
+   printf("###vpn trying to store at: %d, actually: %d", va, vpn)
    pfn = tlb_lookup(vpn, 1);
    offset = VADDR_OFFSET(va);
 

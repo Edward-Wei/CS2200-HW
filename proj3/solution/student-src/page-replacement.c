@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "types.h"
 #include "pagetable.h"
@@ -12,16 +13,29 @@
  * @return The physical frame number of a free (or evictable) frame.
  */
 pfn_t get_free_frame(void) {
-   int i;
-
-   /* See if there are any free frames */
-   for (i = 0; i < CPU_NUM_FRAMES; i++)
-      if (rlt[i].pcb == NULL)
-         return i;
-
-   /* FIX ME : Problem 5 */
-   /* IMPLEMENT A CLOCK SWEEP ALGORITHM HERE */
-
-   /* If all else fails, return a random frame */
-   return rand() % CPU_NUM_FRAMES;
+    printf("###Get free frame called\n");
+    int i;
+    
+    /* See if there are any free frames */
+    for (i = 0; i < CPU_NUM_FRAMES; i++)
+        if (rlt[i].pcb == NULL)
+            return i;
+    
+    /* FIX ME : Problem 5 */
+    for (i = 0; i < CPU_NUM_FRAMES; i++) {
+        if (rlt[i].pcb->pagetable[rlt[i].vpn].used) {
+            rlt[i].pcb->pagetable[rlt[i].vpn].used = 0;
+        } else {
+            return (pfn_t) i;
+        }
+        
+        if (i == CPU_NUM_FRAMES) {
+            i = 0;
+        }
+        
+    }
+    /* IMPLEMENT A CLOCK SWEEP ALGORITHM HERE */
+    
+    /* If all else fails, return a random frame */
+    return rand() % CPU_NUM_FRAMES;
 }

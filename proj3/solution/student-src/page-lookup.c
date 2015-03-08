@@ -1,6 +1,7 @@
 #include "swapfile.h"
 #include "statistics.h"
 #include "pagetable.h"
+#include <stdio.h>
 
 /*******************************************************************************
  * Looks up an address in the current page table. If the entry for the given
@@ -11,12 +12,11 @@
  * @return The physical frame number of the page we are accessing.
  */
 pfn_t pagetable_lookup(vpn_t vpn, int write) {
+    printf("###Pagetable lookup called\n");
     pte_t pte = current_pagetable[vpn];
     pfn_t pfn = pte.pfn;
     
-    if (pte.valid) {
-        return pfn;
-    } else {
+    if (!pte.valid) {
         count_pagefaults++;
         return pagefault_handler(vpn, write);
     }
