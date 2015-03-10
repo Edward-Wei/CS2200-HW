@@ -5,7 +5,8 @@
 #include "process.h"
 #include "global.h"
 #include "swapfile.h"
-#include "tlb.h"
+#include "tlb.h" 
+#include "page-splitting.h"
 
 /*******************************************************************************
  * Page fault handler. When the CPU encounters an invalid address mapping in a
@@ -44,15 +45,15 @@ pfn_t pagefault_handler(vpn_t request_vpn, int write) {
      * 3) Clear the victim page's TLB entry (hint: tlb_clearone()).
      */
     //FIX
-    if (victim_pcb != NULL) {
-        pte_t *victim_ptable = victim_pcb->pagetable;
-        if (victim_ptable[victim_vpn].valid) {
-            if (victim_ptable[victim_vpn].dirty) {
-                page_to_disk(victim_pfn, victim_vpn, victim_pcb->pid);
-            }
-            victim_ptable[victim_vpn].valid = 0;
-            tlb_clearone(victim_vpn);
+    
+    pte_t *entry = &current_pagetable[victim_pfn];
+    if (entry != NULL && entry->valid) {
+        if (entry->dirty) {
+            page_to_disk(victim_pfn, victim_vpn, victim_pcb->pid);
         }
+        
+        victim_pcb->pagetable[VADDR_PAGENUM(victim_vpn)].valid = 0;
+        tlb_clearone(victim_vpn);
     }
     
     printf("****PAGE FAULT has occurred at VPN %u. Evicting (PFN %u VPN %u) as victim.\n", request_vpn,
@@ -61,13 +62,16 @@ pfn_t pagefault_handler(vpn_t request_vpn, int write) {
     /* Update the reverse lookup table so that
      it knows about the requesting process  */
     //FIX
-    rlt[victim_pfn].vpn = request_vpn;
     rlt[victim_pfn].pcb = current;
+    rlt[victim_pfn].vpn = request_vpn;
+    
     
     /* Update the requesting process' page table */
     //FIX
-    current_pagetable[request_vpn].pfn = victim_pfn;
-    current_pagetable[request_vpn].valid = 1;
+    printf("VALIDHIT");
+    pte_t *current_pte = &(current->pagetable[request_vpn]);
+    current_pte->pfn = victim_pfn;
+    current_pte->valid = 1;
     
     /*
      * Retreive the page from disk. Note that is really a lie: we save pages in

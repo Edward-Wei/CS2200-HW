@@ -13,13 +13,22 @@
  */
 pfn_t pagetable_lookup(vpn_t vpn, int write) {
     printf("###Pagetable lookup called\n");
-    pte_t pte = current_pagetable[vpn];
-    pfn_t pfn = pte.pfn;
+    //pfn_t pfn = ;
     
-    if (!pte.valid) {
+    pte_t *pte = &(current_pagetable[vpn]);
+    
+    if (!pte->valid) {
         count_pagefaults++;
-        return pagefault_handler(vpn, write);
+        printf("Pagefault hit");
+        pte->pfn = pagefault_handler(vpn, write);
+        pte = &(current_pagetable[vpn]);
+    }
+    
+    //pte->valid = 1;
+    pte->used = 1;
+    if (write) {
+        pte->dirty = write;
     }
 
-    return pfn;
+    return pte->pfn;
 }

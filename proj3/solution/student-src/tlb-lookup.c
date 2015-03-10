@@ -24,11 +24,12 @@ pfn_t tlb_lookup(vpn_t vpn, int write) {
      * FIX ME : Step 6
      */
     int i;
-    tlbe_t *temp = NULL;
+    tlbe_t *entry = NULL;
     for (i = 0; i < tlb_size; i++) {
         if (tlb[i].valid && tlb[i].vpn == vpn) {
+            printf("TLBHIT");
             count_tlbhits++;
-            temp = tlb + i;
+            entry = &tlb[i];
             break;
         }
     }
@@ -39,10 +40,10 @@ pfn_t tlb_lookup(vpn_t vpn, int write) {
      */
     
     /* If it does not exist (it was not a hit), call the page table reader */
-    if (temp == NULL) {
+    if (entry == NULL) {
         pfn = pagetable_lookup(vpn, write);
     } else {
-        pfn = temp->pfn;
+        pfn = entry->pfn;
     }
     
     
@@ -51,24 +52,26 @@ pfn_t tlb_lookup(vpn_t vpn, int write) {
      * then do a clock-sweep to find a victim.
      */
     
-    if (temp == NULL) {
+    if (entry == NULL) {
         for (i = 0; i < tlb_size; i++) {
             if (!tlb[i].valid) {
-                temp = tlb + i;
-                temp->pfn = pfn;
-                temp->vpn = vpn;
-                temp->valid = 1;
+                tlb[i].pfn = pfn;
+                tlb[i].vpn = vpn;
+                tlb[i].valid = 1;
+                
+                entry = &(tlb[i]);
                 break;
             }
         }
         
-        if (temp == NULL) {
+        if (entry == NULL) {
             for (i = 0; i < tlb_size; i++) {
                 if (!tlb[i].used) {
-                    temp = tlb + i;
-                    temp->pfn = pfn;
-                    temp->vpn = vpn;
-                    temp->valid = 1;
+                    tlb[i].pfn = pfn;
+                    tlb[i].vpn = vpn;
+                    tlb[i].valid = 1;
+                    
+                    entry = &(tlb[i]);
                     break;
                 } else {
                     tlb[i].used = 0;
@@ -94,12 +97,12 @@ pfn_t tlb_lookup(vpn_t vpn, int write) {
      */
     
     if (write) {
-        temp->dirty = write;
-        //current_pagetable[vpn].dirty = write;
+        entry->dirty = write;
+        current_pagetable[vpn].dirty = write;
     }
     
-    temp->used = 1;
-    //current_pagetable[vpn].used = 1;
+    entry->used = 1;
+    current_pagetable[vpn].used = 1;
     printf("### pfn is :%d\n", pfn);
     printf("### vpn should be: %d\n", vpn);
     return pfn;

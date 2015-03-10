@@ -15,22 +15,30 @@
 pfn_t get_free_frame(void) {
     printf("###Get free frame called\n");
     int i;
-    
+    printf("hey");
     /* See if there are any free frames */
     for (i = 0; i < CPU_NUM_FRAMES; i++)
-        if (rlt[i].pcb == NULL)
+        if (rlt[i].pcb == NULL) {
             return i;
+        }
+    
+    printf("fuckkkk");
     
     /* FIX ME : Problem 5 */
-    for (i = 0; i < CPU_NUM_FRAMES; i++) {
-        if (rlt[i].pcb->pagetable[rlt[i].vpn].used) {
-            rlt[i].pcb->pagetable[rlt[i].vpn].used = 0;
+    for (i = 0; i < CPU_NUM_PTE; i++) {
+        pte_t *entry = &(current_pagetable[i]);
+        
+        if (entry->used) {
+            printf("bye");
+            entry->used = 0;
         } else {
-            return (pfn_t) i;
+            printf("hi");
+            return entry->pfn;
         }
         
-        if (i == CPU_NUM_FRAMES) {
-            i = 0;
+        if (i == CPU_NUM_PTE) {
+            printf("fuck");
+            return current_pagetable[0].pfn;
         }
         
     }
