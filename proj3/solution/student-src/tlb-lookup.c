@@ -15,8 +15,6 @@
  * @return The physical frame number of the page we are accessing.
  */
 pfn_t tlb_lookup(vpn_t vpn, int write) {
-    printf("###TLB lookup called\n");
- 
     
     pfn_t pfn;
     
@@ -25,19 +23,20 @@ pfn_t tlb_lookup(vpn_t vpn, int write) {
      */
     int i;
     tlbe_t *entry = NULL;
+
+    /*
+     * Search the TLB for the given VPN. Make sure to increment count_tlbhits if
+     * it was a hit!
+     */
     for (i = 0; i < tlb_size; i++) {
         if (tlb[i].valid && tlb[i].vpn == vpn) {
-            printf("TLBHIT");
             count_tlbhits++;
             entry = &tlb[i];
             break;
         }
     }
     
-    /*
-     * Search the TLB for the given VPN. Make sure to increment count_tlbhits if
-     * it was a hit!
-     */
+    
     
     /* If it does not exist (it was not a hit), call the page table reader */
     if (entry == NULL) {
@@ -52,6 +51,7 @@ pfn_t tlb_lookup(vpn_t vpn, int write) {
      * then do a clock-sweep to find a victim.
      */
     
+    
     if (entry == NULL) {
         for (i = 0; i < tlb_size; i++) {
             if (!tlb[i].valid) {
@@ -65,11 +65,13 @@ pfn_t tlb_lookup(vpn_t vpn, int write) {
         }
         
         if (entry == NULL) {
+            
             for (i = 0; i < tlb_size; i++) {
                 if (!tlb[i].used) {
                     tlb[i].pfn = pfn;
                     tlb[i].vpn = vpn;
                     tlb[i].valid = 1;
+                    
                     
                     entry = &(tlb[i]);
                     break;
@@ -77,8 +79,13 @@ pfn_t tlb_lookup(vpn_t vpn, int write) {
                     tlb[i].used = 0;
                 }
                 
-                if (i == tlb_size) {
-                    i = 0;
+                if (i == tlb_size - 1) {
+                    
+                    tlb[0].pfn = pfn;
+                    tlb[0].vpn = vpn;
+                    tlb[0].valid = 1;
+                    
+                    entry = &(tlb[0]);
                 }
             }
         }
@@ -96,15 +103,19 @@ pfn_t tlb_lookup(vpn_t vpn, int write) {
      * we didn't!).
      */
     
+    
+    
     if (write) {
         entry->dirty = write;
         current_pagetable[vpn].dirty = write;
     }
     
+    
+    
     entry->used = 1;
     current_pagetable[vpn].used = 1;
-    printf("### pfn is :%d\n", pfn);
-    printf("### vpn should be: %d\n", vpn);
+    
+    
     return pfn;
 }
 

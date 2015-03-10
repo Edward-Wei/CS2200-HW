@@ -13,31 +13,27 @@
  * @return The physical frame number of a free (or evictable) frame.
  */
 pfn_t get_free_frame(void) {
-    printf("###Get free frame called\n");
+    
     int i;
-    printf("hey");
+    
     /* See if there are any free frames */
-    for (i = 0; i < CPU_NUM_FRAMES; i++)
+    for (i = 0; i < CPU_NUM_FRAMES; i++) {
         if (rlt[i].pcb == NULL) {
             return i;
         }
-    
-    printf("fuckkkk");
+    }
     
     /* FIX ME : Problem 5 */
     for (i = 0; i < CPU_NUM_PTE; i++) {
         pte_t *entry = &(current_pagetable[i]);
         
         if (entry->used) {
-            printf("bye");
             entry->used = 0;
         } else {
-            printf("hi");
             return entry->pfn;
         }
         
-        if (i == CPU_NUM_PTE) {
-            printf("fuck");
+        if (i == CPU_NUM_PTE - 1) {
             return current_pagetable[0].pfn;
         }
         

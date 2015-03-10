@@ -24,8 +24,8 @@ double compute_emat() {
     
     // might be wrong, recalculate
     long int hitsTime =  count_tlbhits * MEMORY_ACCESS_TIME;
-    long int missesTime = tlb_misses * 2 * MEMORY_ACCESS_TIME;
-    long int faultsTime = DISK_ACCESS_TIME * count_pagefaults;
+    long int missesTime = tlb_misses * MEMORY_ACCESS_TIME;
+    long int faultsTime = count_pagefaults * DISK_ACCESS_TIME;
     
     return (hitsTime + missesTime + faultsTime) / total_accesses;
 }

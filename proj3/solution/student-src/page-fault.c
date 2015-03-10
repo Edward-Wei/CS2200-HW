@@ -20,7 +20,6 @@
  * @return The physical frame the OS has mapped to the virtual page.
  */
 pfn_t pagefault_handler(vpn_t request_vpn, int write) {
-    printf("###Page fault handler called\n");
     pfn_t victim_pfn;
     vpn_t victim_vpn;
     pcb_t *victim_pcb;
@@ -68,7 +67,6 @@ pfn_t pagefault_handler(vpn_t request_vpn, int write) {
     
     /* Update the requesting process' page table */
     //FIX
-    printf("VALIDHIT");
     pte_t *current_pte = &(current->pagetable[request_vpn]);
     current_pte->pfn = victim_pfn;
     current_pte->valid = 1;

@@ -12,20 +12,18 @@
  * @return The physical frame number of the page we are accessing.
  */
 pfn_t pagetable_lookup(vpn_t vpn, int write) {
-    printf("###Pagetable lookup called\n");
     //pfn_t pfn = ;
     
     pte_t *pte = &(current_pagetable[vpn]);
     
     if (!pte->valid) {
         count_pagefaults++;
-        printf("Pagefault hit");
         pte->pfn = pagefault_handler(vpn, write);
-        pte = &(current_pagetable[vpn]);
     }
     
-    //pte->valid = 1;
+    pte->valid = 1;
     pte->used = 1;
+    
     if (write) {
         pte->dirty = write;
     }
