@@ -12,10 +12,11 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "os-sim.h"
 
-#define DEBUG = 0
+#define DEBUG 0
 
 #if DEBUG
  #define DEBUG_PRINTF(o) printf(o)
@@ -41,8 +42,8 @@ static pthread_mutex_t ready_mutex;
 
 static pthread_cond_t quit_idle;
 
-static bool round_robin;
-static bool static_priority;
+static int round_robin;
+static int static_priority;
 static int time_slice;
 static int cpu_count; 
 
@@ -63,9 +64,36 @@ static int cpu_count;
  *	context_switch() is prototyped in os-sim.h. Look there for more information 
  *	about it and its parameters.
  */
+
+ static void add_to_ready_queue(pcb_t* process);
+
 static void schedule(unsigned int cpu_id)
 {
-    /* FIX ME */
+    int runtime = -1;
+    pthread_mutex_lock(&ready_mutex);
+
+    if(head == NULL) {
+        pthread_mutex_unlock(&ready_mutex);
+        context_switch(cpu_id, NULL, runtime);
+    } else {
+        
+        head->state = PROCESS_RUNNING;
+        pcb_t* process = head;
+
+        if (head == tail) {
+            head = NULL;
+            tail = NULL;
+        } else {
+            head = head->next;
+        }
+
+        pthread_mutex_lock(&current_mutex);
+        current[cpu_id] = process;
+        pthread_mutex_unlock(&current_mutex);
+
+        pthread_mutex_unlock(&ready_mutex);
+        context_switch(cpu_id, process, runtime);
+    }
 }
 
 
@@ -92,7 +120,7 @@ extern void idle(unsigned int cpu_id)
         pthread_cond_wait(&quit_idle, &ready_mutex);
      }
      pthread_mutex_unlock(&ready_mutex);
-     schdule(cpu_id);
+     schedule(cpu_id);
 }
 
 
@@ -163,8 +191,6 @@ extern void wake_up(pcb_t *process)
     DEBUG_PRINTF("wake_up() called");
     
     add_to_ready_queue(process);
-
-    
 }
 
 static void add_to_ready_queue(pcb_t* process) {
@@ -178,7 +204,7 @@ static void add_to_ready_queue(pcb_t* process) {
         tail = process;
     }
 
-    pthread_cond_boradcast(&quit_idle);
+    pthread_cond_broadcast(&quit_idle);
     pthread_mutex_unlock(&ready_mutex);
 }
 
@@ -189,6 +215,7 @@ static void add_to_ready_queue(pcb_t* process) {
  */
 int main(int argc, char *argv[])
 { 
+    DEBUG_PRINTF("STARTING\n");
 
     round_robin = 0;
     static_priority = 0;
@@ -207,7 +234,7 @@ int main(int argc, char *argv[])
 
     cpu_count = atoi(argv[1]);
 
-    if (strcmp(arg[2],"-r")==0) {
+    if (strcmp(argv[2],"-r")==0) {
         round_robin = 1;
         time_slice = atoi(argv[2]);
     } else if (strcmp(argv[2], "-p") == 0) {
