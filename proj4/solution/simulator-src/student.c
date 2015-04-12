@@ -16,12 +16,14 @@
 
 #include "os-sim.h"
 
-#define DEBUG 0
+#define DEBUG 1
 
 #if DEBUG
  #define DEBUG_PRINTF(o) printf(o)
+ #define DEBUG_PRINTFVAR(o, v) printf(o, v)
 #else
  #define DEBUG_PRINTF(o) printf("")
+ #define DEBUG_PRINTFVAR(o, v) printf("")
 #endif
 
 /*
@@ -65,16 +67,18 @@ static int cpu_count;
  *	about it and its parameters.
  */
 
- static void add_to_ready_queue(pcb_t* process);
+static void add_to_ready_queue(pcb_t* process);
+static void add_with_priority(pcb_t* process);
 
 static void schedule(unsigned int cpu_id)
 {
-    int runtime = -1;
-    pthread_mutex_lock(&ready_mutex);
+    DEBUG_PRINTF("schedule() called\n");
 
+    pthread_mutex_lock(&ready_mutex);
+    DEBUG_PRINTF("schedule() mutex obtained\n");
     if(head == NULL) {
         pthread_mutex_unlock(&ready_mutex);
-        context_switch(cpu_id, NULL, runtime);
+        context_switch(cpu_id, NULL, time_slice);
     } else {
         
         head->state = PROCESS_RUNNING;
@@ -88,11 +92,12 @@ static void schedule(unsigned int cpu_id)
         }
 
         pthread_mutex_lock(&current_mutex);
+        DEBUG_PRINTF("schedule() current mutex obtained \n");
         current[cpu_id] = process;
         pthread_mutex_unlock(&current_mutex);
 
         pthread_mutex_unlock(&ready_mutex);
-        context_switch(cpu_id, process, runtime);
+        context_switch(cpu_id, process, time_slice);
     }
 }
 
@@ -106,6 +111,7 @@ static void schedule(unsigned int cpu_id)
  */
 extern void idle(unsigned int cpu_id)
 {
+    DEBUG_PRINTF("idle() called\n");
     /*
      * REMOVE THE LINE BELOW AFTER IMPLEMENTING IDLE()
      *
@@ -116,10 +122,12 @@ extern void idle(unsigned int cpu_id)
      * remove the call to mt_safe_usleep() below.
      */ 
      pthread_mutex_lock(&ready_mutex);
+     DEBUG_PRINTF("idle() mutex obtained");
      while (head == NULL) {
         pthread_cond_wait(&quit_idle, &ready_mutex);
      }
      pthread_mutex_unlock(&ready_mutex);
+     DEBUG_PRINTF("idle() mutex released");
      schedule(cpu_id);
 }
 
@@ -133,7 +141,20 @@ extern void idle(unsigned int cpu_id)
  */
 extern void preempt(unsigned int cpu_id)
 {
-    /* FIX ME */
+    DEBUG_PRINTF("preempt() called\n");
+    pthread_mutex_lock(&current_mutex);
+    DEBUG_PRINTF("preempt() mutex obtained \n");
+
+    current[cpu_id]->state = PROCESS_READY;
+    pthread_mutex_unlock(&current_mutex);
+
+    if (static_priority) {
+        add_with_priority(current[cpu_id]);
+    } else {
+        add_to_ready_queue(current[cpu_id]);
+    }
+
+    schedule(cpu_id);
 }
 
 
@@ -146,7 +167,9 @@ extern void preempt(unsigned int cpu_id)
  */
 extern void yield(unsigned int cpu_id)
 {
+    DEBUG_PRINTF("yield() called\n");
     pthread_mutex_lock(&current_mutex);
+    DEBUG_PRINTF("yield() mutex obtained");
 
     if (current[cpu_id]) {
         current[cpu_id]->state = PROCESS_WAITING;
@@ -164,7 +187,9 @@ extern void yield(unsigned int cpu_id)
  */
 extern void terminate(unsigned int cpu_id)
 {
+    DEBUG_PRINTF("terminate() called\n");
     pthread_mutex_lock(&current_mutex);
+    DEBUG_PRINTF("terminate() mutex obtained");
     current[cpu_id]->state = PROCESS_TERMINATED;
     pthread_mutex_unlock(&current_mutex);
     schedule(cpu_id);
@@ -188,13 +213,15 @@ extern void terminate(unsigned int cpu_id)
  */
 extern void wake_up(pcb_t *process)
 {   
-    DEBUG_PRINTF("wake_up() called");
+    DEBUG_PRINTF("wake_up() called\n");
     
     add_to_ready_queue(process);
 }
 
 static void add_to_ready_queue(pcb_t* process) {
+    DEBUG_PRINTF("add_to_ready_queue() called\n");
     pthread_mutex_lock(&ready_mutex);
+    DEBUG_PRINTF("add_to_ready_queue() mutex entered\n");
     process->state = PROCESS_READY;
     if (head == NULL) {
         head = process;
@@ -206,6 +233,10 @@ static void add_to_ready_queue(pcb_t* process) {
 
     pthread_cond_broadcast(&quit_idle);
     pthread_mutex_unlock(&ready_mutex);
+}
+
+static void add_with_priority(pcb_t* process) {
+
 }
 
 
@@ -222,7 +253,7 @@ int main(int argc, char *argv[])
     time_slice = -1;
 
     /* Parse command-line arguments */
-    if (argc != 2)
+    if (argc < 2)
     {
         fprintf(stderr, "CS 2200 Project 4 -- Multithreaded OS Simulator\n"
             "Usage: ./os-sim <# CPUs> [ -r <time slice> | -p ]\n"
@@ -233,12 +264,23 @@ int main(int argc, char *argv[])
     }
 
     cpu_count = atoi(argv[1]);
+    DEBUG_PRINTFVAR("NUM ARGS: %d\n", argc);
 
-    if (strcmp(argv[2],"-r")==0) {
+
+    if (argc == 4 && strcmp(argv[2],"-r")==0) {
         round_robin = 1;
-        time_slice = atoi(argv[2]);
-    } else if (strcmp(argv[2], "-p") == 0) {
+        time_slice = atoi(argv[3]);
+        DEBUG_PRINTFVAR("TIMESLICE: %d\n (in 100s of ms)", time_slice);
+    } else if (argc == 3 && strcmp(argv[2], "-p") == 0) {
         static_priority = 1;
+        DEBUG_PRINTF("Using static priority\n");
+    } else if (argc != 2) {
+        fprintf(stderr, "CS 2200 Project 4 -- Multithreaded OS Simulator\n"
+            "Usage: ./os-sim <# CPUs> [ -r <time slice> | -p ]\n"
+            "    Default : FIFO Scheduler\n"
+            "         -r : Round-Robin Scheduler\n"
+            "         -p : Static Priority Scheduler\n\n");
+        return -1;
     }
  
 
@@ -247,6 +289,7 @@ int main(int argc, char *argv[])
     assert(current != NULL);
     pthread_mutex_init(&current_mutex, NULL);
     pthread_mutex_init(&ready_mutex, NULL);
+    pthread_cond_init(&quit_idle, NULL);
 
     /* Start the simulator in the library */
     start_simulator(cpu_count);
