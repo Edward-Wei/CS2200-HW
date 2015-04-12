@@ -122,7 +122,7 @@ extern void idle(unsigned int cpu_id)
      * remove the call to mt_safe_usleep() below.
      */ 
      pthread_mutex_lock(&ready_mutex);
-     DEBUG_PRINTF("idle() mutex obtained");
+     DEBUG_PRINTF("idle() mutex obtained\n");
      while (head == NULL) {
         pthread_cond_wait(&quit_idle, &ready_mutex);
      }
@@ -215,7 +215,11 @@ extern void wake_up(pcb_t *process)
 {   
     DEBUG_PRINTF("wake_up() called\n");
     
-    add_to_ready_queue(process);
+    if (static_priority) {
+        add_with_priority(process);
+    } else {
+        add_to_ready_queue(process);
+    }
 }
 
 static void add_to_ready_queue(pcb_t* process) {
@@ -236,7 +240,76 @@ static void add_to_ready_queue(pcb_t* process) {
 }
 
 static void add_with_priority(pcb_t* process) {
+    DEBUG_PRINTF("add_with_priority() called\n");
+    pthread_mutex_lock(&ready_mutex);
+    DEBUG_PRINTF("add_with_priority() ready mutex obtianed \n");
 
+    if (head == NULL) {
+        head = process;
+        tail = process;
+        
+    } else {
+        pcb_t* curr = head;
+        if (head->static_priority < process->static_priority) {
+            process->next = head;
+            head = process;
+        } else {
+            while (curr->next != NULL) {
+                if (curr->next->static_priority > process->static_priority) {
+                    curr = curr->next;
+                } else {
+                    process->next = curr->next;
+                    break;
+                }
+            }
+        }
+
+        if (curr == tail) {
+            tail = process;
+            tail->next = NULL;
+        }
+
+        curr->next = process;
+    }
+
+    pthread_mutex_lock(&current_mutex);
+    DEBUG_PRINTF("add_with_priority() current mutex obtained\n");
+    int processFree = 0; //bool
+    int cpuToUse = 0;
+    int lowestPriority = 11;
+
+    int i;
+    for (i = 0; i < cpu_count; i++) {
+        if (current[i] == NULL || current[i]->state == PROCESS_TERMINATED) {
+            DEBUG_PRINTF("add_with_priority() Found a free cpu\n");
+            processFree = 1;
+            cpuToUse = i;
+            break;
+        }
+    }
+
+    DEBUG_PRINTF("add_with_priority() blank space\n");
+
+    if (!processFree) {
+        DEBUG_PRINTF("add_with_priority() no CPU free, finding best one\n");
+        for (i = 0; i < cpu_count; i++) {
+            if (current[i]->static_priority < lowestPriority) {
+                lowestPriority = current[i]->static_priority;
+                cpuToUse = i;
+            }
+        }
+    }
+
+    pthread_mutex_unlock(&current_mutex);
+    pthread_mutex_unlock(&ready_mutex);
+    
+    if(!processFree && process->static_priority > lowestPriority ) {
+        DEBUG_PRINTFVAR("add_with_priority() forcing preempt for %d\n", cpuToUse);
+        force_preempt(cpuToUse);
+    }
+ 
+    pthread_cond_broadcast(&quit_idle);
+    
 }
 
 
@@ -265,6 +338,7 @@ int main(int argc, char *argv[])
 
     cpu_count = atoi(argv[1]);
     DEBUG_PRINTFVAR("NUM ARGS: %d\n", argc);
+    DEBUG_PRINTFVAR("CPU COUNT: %d\n", cpu_count);
 
 
     if (argc == 4 && strcmp(argv[2],"-r")==0) {
