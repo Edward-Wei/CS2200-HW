@@ -16,7 +16,7 @@
 
 #include "os-sim.h"
 
-#define DEBUG 1
+#define DEBUG 0
 
 #if DEBUG
  #define DEBUG_PRINTF(o) printf(o)
@@ -92,12 +92,14 @@ static void schedule(unsigned int cpu_id)
             head = head->next;
         }
 
+        pthread_mutex_unlock(&ready_mutex);
+
         pthread_mutex_lock(&current_mutex);
         DEBUG_PRINTF("schedule() current mutex obtained \n");
         current[cpu_id] = process;
         pthread_mutex_unlock(&current_mutex);
 
-        pthread_mutex_unlock(&ready_mutex);
+        
         context_switch(cpu_id, process, time_slice);
     }
 }
@@ -122,12 +124,18 @@ extern void idle(unsigned int cpu_id)
      * you implement a proper idle() function using a condition variable,
      * remove the call to mt_safe_usleep() below.
      */ 
+
+     pthread_mutex_lock(&current_mutex);
+     current[cpu_id] = NULL;
+     pthread_mutex_unlock(&current_mutex);
+
      pthread_mutex_lock(&ready_mutex);
      DEBUG_PRINTF("idle() mutex obtained\n");
      while (head == NULL) {
         pthread_cond_wait(&quit_idle, &ready_mutex);
      }
      pthread_mutex_unlock(&ready_mutex);
+
      DEBUG_PRINTF("idle() mutex released");
      schedule(cpu_id);
 }
@@ -143,16 +151,23 @@ extern void idle(unsigned int cpu_id)
 extern void preempt(unsigned int cpu_id)
 {
     DEBUG_PRINTF("preempt() called\n");
+    pcb_t* process = NULL;
+
     pthread_mutex_lock(&current_mutex);
     DEBUG_PRINTF("preempt() current mutex obtained \n");
 
-    current[cpu_id]->state = PROCESS_READY;
+    process = current[cpu_id];
+    current[cpu_id] = NULL;
+
     pthread_mutex_unlock(&current_mutex);
 
-    if (static_priority) {
-        add_with_priority(current[cpu_id]);
-    } else {
-        add_to_ready_queue(current[cpu_id]);
+    if (process != NULL) {
+        process->state = PROCESS_READY;
+        if (static_priority) {
+            add_with_priority(process);
+        } else {
+            add_to_ready_queue(process);
+        }
     }
 
     schedule(cpu_id);
@@ -176,6 +191,8 @@ extern void yield(unsigned int cpu_id)
         current[cpu_id]->state = PROCESS_WAITING;
     }
 
+    current[cpu_id] = NULL;
+
     pthread_mutex_unlock(&current_mutex);
     schedule(cpu_id);
 }
@@ -191,8 +208,13 @@ extern void terminate(unsigned int cpu_id)
     DEBUG_PRINTF("terminate() called\n");
     pthread_mutex_lock(&current_mutex);
     DEBUG_PRINTF("terminate() mutex obtained\n");
-    current[cpu_id]->state = PROCESS_TERMINATED;
+
+    pcb_t* process = current[cpu_id];
+    current[cpu_id] = NULL;
+    process->state = PROCESS_TERMINATED;
+
     pthread_mutex_unlock(&current_mutex);
+
     schedule(cpu_id);
 }
 
@@ -215,12 +237,61 @@ extern void terminate(unsigned int cpu_id)
 extern void wake_up(pcb_t *process)
 {   
     DEBUG_PRINTF("wake_up() called\n");
-    
+
+    process->state = PROCESS_READY;
+
+    int processFree = 0; //bool
+    int cpuToUse = 0;
+    int lowestPriority = 11;
+
+    if (static_priority) {
+        pthread_mutex_lock(&current_mutex);
+        DEBUG_PRINTF("wake_up() current mutex obtained\n");
+
+        int i;
+        for (i = 0; i < cpu_count; i++) {
+            if (current[i] == NULL) {
+                DEBUG_PRINTF("wake_up() Found a free cpu\n");
+                processFree = 1;
+                cpuToUse = i;
+                break;
+            }
+        }
+
+        DEBUG_PRINTF("wake_up() blank space\n");
+
+        if (!processFree) {
+            DEBUG_PRINTF("wake_up() no CPU free, finding best one\n");
+            for (i = 0; i < cpu_count; i++) {
+                DEBUG_PRINTFVAR("wake_up() CPU count: %d\n", i);
+                if (current[i] != NULL && current[i]->static_priority < lowestPriority) {
+                    DEBUG_PRINTF("wake_up() found valid replacement \n");
+                    lowestPriority = current[i]->static_priority;
+                    cpuToUse = i;
+                }
+            }
+        }
+
+        DEBUG_PRINTFVAR("wake_up() best CPU: %d\n", cpuToUse);
+
+        pthread_mutex_unlock(&current_mutex);
+    } else {
+        processFree = 1; // easy break
+    }
+
+
     if (static_priority) {
         add_with_priority(process);
     } else {
         add_to_ready_queue(process);
     }
+
+    
+
+    if(!processFree && process->static_priority > lowestPriority ) {
+        DEBUG_PRINTFVAR("add_with_priority() forcing preempt for %d\n", cpuToUse);
+        force_preempt(cpuToUse);
+    }    
 }
 
 static void add_to_ready_queue(pcb_t* process) {
@@ -231,12 +302,14 @@ static void add_to_ready_queue(pcb_t* process) {
     if (head == NULL) {
         head = process;
         tail = process;
+        process->next = NULL;
+        pthread_cond_broadcast(&quit_idle);
     } else {
         tail->next = process;
         tail = process;
+        process->next = NULL;
     }
 
-    pthread_cond_signal(&quit_idle);
     pthread_mutex_unlock(&ready_mutex);
 }
 
@@ -248,71 +321,32 @@ static void add_with_priority(pcb_t* process) {
     if (head == NULL) {
         head = process;
         tail = process;
+        process->next = NULL;
+        pthread_cond_broadcast(&quit_idle);
         DEBUG_PRINTF("add_with_priority() head is null\n");
     } else {
         DEBUG_PRINTF("add_with_priority() head is not null\n");
-        pcb_t* curr = head;
-        if (head->static_priority < process->static_priority) {
+        
+        if (process->static_priority > head->static_priority) {
             process->next = head;
             head = process;
         } else {
-            while (curr->next != NULL) {
-                if (curr->next->static_priority > process->static_priority) {
-                    curr = curr->next;
-                } else {
-                    process->next = curr->next;
-                    break;
-                }
+            pcb_t* curr = head;
+            while (curr->next != NULL && curr->static_priority >= process->static_priority) {
+                curr = curr->next;
             }
-        }
+            process->next = curr->next;
+            curr->next = process;
 
-        if (curr == tail) {
-            tail = process;
-            tail->next = NULL;
-        }
-
-        curr->next = process;
-    }
-
-    pthread_mutex_lock(&current_mutex);
-    DEBUG_PRINTF("add_with_priority() current mutex obtained\n");
-    int processFree = 0; //bool
-    int cpuToUse = 0;
-    int lowestPriority = 11;
-
-    int i;
-    for (i = 0; i < cpu_count; i++) {
-        if (current[i] == NULL || current[i]->state == PROCESS_TERMINATED) {
-            DEBUG_PRINTF("add_with_priority() Found a free cpu\n");
-            processFree = 1;
-            cpuToUse = i;
-            break;
-        }
-    }
-
-    DEBUG_PRINTF("add_with_priority() blank space\n");
-
-    if (!processFree) {
-        DEBUG_PRINTF("add_with_priority() no CPU free, finding best one\n");
-        for (i = 0; i < cpu_count; i++) {
-            if (current[i]->static_priority < lowestPriority) {
-                lowestPriority = current[i]->static_priority;
-                cpuToUse = i;
+            if (curr == tail) {
+                DEBUG_PRINTF("add_with_priority() updating tail \n");
+                tail = process;
+                tail->next = NULL;
             }
-        }
-    }
-
-    if(!processFree && process->static_priority > lowestPriority ) {
-        DEBUG_PRINTFVAR("add_with_priority() forcing preempt for %d\n", cpuToUse);
-        force_preempt(cpuToUse);
+        }    
     }
     
-    pthread_mutex_unlock(&current_mutex);
-    
-    pthread_mutex_unlock(&ready_mutex);
-
-    pthread_cond_signal(&quit_idle);
-    
+    pthread_mutex_unlock(&ready_mutex); 
 }
 
 
@@ -324,6 +358,9 @@ int main(int argc, char *argv[])
 { 
     DEBUG_PRINTF("STARTING\n");
 
+    current = NULL;
+    head = NULL;
+    tail = NULL;
     round_robin = 0;
     static_priority = 0;
     time_slice = -1;
