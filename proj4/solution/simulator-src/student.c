@@ -77,10 +77,11 @@ static void schedule(unsigned int cpu_id)
     pthread_mutex_lock(&ready_mutex);
     DEBUG_PRINTF("schedule() mutex obtained\n");
     if(head == NULL) {
+        DEBUG_PRINTF("schedule() head is null\n");
         pthread_mutex_unlock(&ready_mutex);
         context_switch(cpu_id, NULL, time_slice);
     } else {
-        
+        DEBUG_PRINTF("schedule() head not null\n");
         head->state = PROCESS_RUNNING;
         pcb_t* process = head;
 
@@ -143,7 +144,7 @@ extern void preempt(unsigned int cpu_id)
 {
     DEBUG_PRINTF("preempt() called\n");
     pthread_mutex_lock(&current_mutex);
-    DEBUG_PRINTF("preempt() mutex obtained \n");
+    DEBUG_PRINTF("preempt() current mutex obtained \n");
 
     current[cpu_id]->state = PROCESS_READY;
     pthread_mutex_unlock(&current_mutex);
@@ -169,7 +170,7 @@ extern void yield(unsigned int cpu_id)
 {
     DEBUG_PRINTF("yield() called\n");
     pthread_mutex_lock(&current_mutex);
-    DEBUG_PRINTF("yield() mutex obtained");
+    DEBUG_PRINTF("yield() mutex obtained\n");
 
     if (current[cpu_id]) {
         current[cpu_id]->state = PROCESS_WAITING;
@@ -189,7 +190,7 @@ extern void terminate(unsigned int cpu_id)
 {
     DEBUG_PRINTF("terminate() called\n");
     pthread_mutex_lock(&current_mutex);
-    DEBUG_PRINTF("terminate() mutex obtained");
+    DEBUG_PRINTF("terminate() mutex obtained\n");
     current[cpu_id]->state = PROCESS_TERMINATED;
     pthread_mutex_unlock(&current_mutex);
     schedule(cpu_id);
@@ -235,7 +236,7 @@ static void add_to_ready_queue(pcb_t* process) {
         tail = process;
     }
 
-    pthread_cond_broadcast(&quit_idle);
+    pthread_cond_signal(&quit_idle);
     pthread_mutex_unlock(&ready_mutex);
 }
 
@@ -247,8 +248,9 @@ static void add_with_priority(pcb_t* process) {
     if (head == NULL) {
         head = process;
         tail = process;
-        
+        DEBUG_PRINTF("add_with_priority() head is null\n");
     } else {
+        DEBUG_PRINTF("add_with_priority() head is not null\n");
         pcb_t* curr = head;
         if (head->static_priority < process->static_priority) {
             process->next = head;
@@ -300,15 +302,16 @@ static void add_with_priority(pcb_t* process) {
         }
     }
 
-    pthread_mutex_unlock(&current_mutex);
-    pthread_mutex_unlock(&ready_mutex);
-    
     if(!processFree && process->static_priority > lowestPriority ) {
         DEBUG_PRINTFVAR("add_with_priority() forcing preempt for %d\n", cpuToUse);
         force_preempt(cpuToUse);
     }
- 
-    pthread_cond_broadcast(&quit_idle);
+    
+    pthread_mutex_unlock(&current_mutex);
+    
+    pthread_mutex_unlock(&ready_mutex);
+
+    pthread_cond_signal(&quit_idle);
     
 }
 
