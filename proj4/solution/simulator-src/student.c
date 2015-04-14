@@ -4,8 +4,8 @@
  * Fall 2014
  *
  * This file contains the CPU scheduler for the simulation.
- * Name:
- * GTID:
+ * Name: Philip Bale
+ * GTID: 902985441
  */
 
 #include <assert.h>

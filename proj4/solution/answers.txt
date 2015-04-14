@@ -1,20 +1,59 @@
 CS 2200 Fall 2014
 Project 4
-Name:
-GT Number:
+Name: Philip Bale
+GT Number: 902985441
 
 Problem 1B
 ----------
 
-/* Fix me */
+1: 67.6 s
+2: 36.0 s
+4: 33.8 s
+
+There is not a linear relationship between the number of CPUs and total execution time.  This is because when there are more than 2 CPUs, most of the CPU time is spent idling. 
 
 Problem 2B
 ----------
 
-/* Fix me */
+800:
+# of Context Switches: 136
+Total execution time: 67.6 s
+Total time spent in READY state: 325.4 s
+
+600:
+# of Context Switches: 161
+Total execution time: 67.6 s
+Total time spent in READY state: 314.5 s
+
+400:
+# of Context Switches: 203
+Total execution time: 67.6 s
+Total time spent in READY state: 298.8 s
+
+200:
+# of Context Switches: 362
+Total execution time: 67.5 s
+Total time spent in READY state: 285.2 s
+
+For each of the timeslices, the waiting time decreases with shorter slices.  In a real life situation, however, this is not usually the case because usually there will be many cache misses associate with a process.  If we're constantly switching processes, cache misses will happen frequently and the ofhead to switch processes will be drastic.
 
 Problem 3B
 ----------
 
-/* Fix me */
+FIFO:
+# of Context Switches: 99
+Total execution time: 67.6 s
+Total time spent in READY state: 389.9 s
+
+Round Robin:
+# of Context Switches: 203
+Total execution time: 67.6 s
+Total time spent in READY state: 299.9 s
+
+Priority:
+# of Context Switches: 169
+Total execution time: 68.4 s
+Total time spent in READY state: 150.7 s
+
+Priority is closest to SJF, since SJF is also a priority schedule, but with job length as the priority gauge.  We simply would have to use job length as our priority indicator to make our priority scheduler match SJF.
 
