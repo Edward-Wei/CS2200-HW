@@ -137,23 +137,23 @@ int rtp_send_message(CONN_INFO *connection, MESSAGE*msg){
      * If the response is an ACK, then you may send the next one
      */
     
-    int *num = malloc(sizeof(int));
-    PACKET *response = malloc(sizeof(PACKET));
-    PACKET *packets = packetize(msg->buffer, msg->length, num);
+    int num;
+    PACKET response;
+    PACKET *packets = packetize(msg->buffer, msg->length, &num);
     
     DEBUG_PRINTF("time to transfer data in rtp_send_message()\n");
     DEBUG_PRINTFVAR("We have %d packets\n", *num);
 
     int i = 0;
-    while (i < *num) {
+    while (i < num) {
     	DEBUG_PRINTFVAR("Sending packet %d \n", i);
-        sendto(connection->socket, (void *) &packets[i], sizeof(PACKET), 0,
+        sendto(connection->socket, &packets[i], sizeof(PACKET), 0,
                connection->remote_addr, connection->addrlen);
         DEBUG_PRINTF("Send to finished()\n");
-        recvfrom(connection->socket, (void *) response, sizeof(PACKET), 0,
+        recvfrom(connection->socket, &response, sizeof(PACKET), 0,
                  connection->remote_addr, &connection->addrlen);
         DEBUG_PRINTF("Response recieved()\n");
-        if (response->type == ACK)
+        if (response.type == ACK)
         {
             i++;
         }
@@ -162,7 +162,6 @@ int rtp_send_message(CONN_INFO *connection, MESSAGE*msg){
     DEBUG_PRINTF("Sending is complete! \n");
     
     free(packets);
-    free(response);
     return 1;
 }
 
@@ -172,36 +171,27 @@ int rtp_send_message(CONN_INFO *connection, MESSAGE*msg){
  */
 MESSAGE* rtp_receive_message(CONN_INFO *connection){
 	DEBUG_PRINTF("rtp_receive_message() called! \n");
-    /* ---- FIXME ----
-     * The goal of this function is to handle
-     * receiving a message from the remote server using
-     * recvfrom and the connection info given. You must
-     * dynamically resize a buffer as you receive a packet
-     * and only add it to the message if the data is considered
-     * valid. The function should return the full message, so it
-     * must continue receiving packets and sending response
-     * ACK/NACK packets until a LAST_DATA packet is successfully
-     * received.
-     */
+
     
     MESSAGE *message = malloc(sizeof(MESSAGE));
+    message->length = 0;
+    message->buffer = NULL;
     int allDataSent = 0;
+
+    PACKET response;
+    response.payload_length = 0;
+    response.checksum = 0;
     
     while (!allDataSent) {
-        PACKET *packet = malloc(sizeof(PACKET));
-        PACKET *response = malloc(sizeof(PACKET));
+        PACKET packet;
         
-        recvfrom(connection->socket, (void *) packet, sizeof(PACKET), 0,
-                 connection->remote_addr, &connection->addrlen);
+        recvfrom(connection->socket, &packet, sizeof(PACKET), 0,
+                 NULL, NULL);
         
-        if (checksum(packet->payload, packet->payload_length) == packet->checksum) {
-            response->type = ACK;
-            response->payload_length = 0;
-            response->checksum = 0;
-            sendto(connection->socket, (void *) response, sizeof(PACKET), 0,
-                   connection->remote_addr, connection->addrlen);
+        if (checksum(packet.payload, packet.payload_length) == packet.checksum) {
             
-            int totalLength = packet->payload_length + message->length;
+            
+            int totalLength = packet.payload_length + message->length;
             DEBUG_PRINTFVAR("rtp_receive_message() buffer length is: %d! \n", (packet->payload_length + message->length));
             char* buff = malloc((totalLength) * sizeof(char));
             
@@ -212,21 +202,23 @@ MESSAGE* rtp_receive_message(CONN_INFO *connection){
                 buff[i] = message->buffer[i];
             }
             
-            for (i = 0; i < packet->payload_length; i++) {
-                buff[i + message->length] = packet->payload[i];
+            for (i = 0; i < packet.payload_length; i++) {
+                buff[i + message->length] = packet.payload[i];
             }
              
             message->buffer = buff;
-            message->length += packet->payload_length;
+            message->length += packet.payload_length;
             
-            if (packet->type == LAST_DATA) {
+            if (packet.type == LAST_DATA) {
                 allDataSent = 1;
             }
+
+            response.type = ACK;
+            sendto(connection->socket, &response, sizeof(PACKET), 0,
+                   connection->remote_addr, connection->addrlen);
         } else {
-            response->type = NACK;
-            response->payload_length = 0;
-            response->checksum = 0;
-            sendto(connection->socket, (void *) response, sizeof(PACKET), 0,
+            response.type = NACK;
+            sendto(connection->socket, &response, sizeof(PACKET), 0,
                    connection->remote_addr, connection->addrlen);
         }
 
