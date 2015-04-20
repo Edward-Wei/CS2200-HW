@@ -59,14 +59,13 @@ void shutdown_socket(CONN_INFO *connection){
  *  Returns a number computed based on the data in the buffer.
  */
 static int checksum(char *buffer, int length){
-
-	/*  ----  FIXME  ----
-	 *
-	 *  The goal is to return a number that is determined by the contents
-	 *  of the buffer passed in as a parameter.  There a multitude of ways
-	 *  to implement this function.  For simplicity, simply sum the ascii
-	 *  values of all the characters in the buffer, and return the total.
-	 */ 
+	int i;
+	int sum = 0;
+	for (i = 0; i < length; i++) {
+		sum += buffer[i];
+	}
+	
+	return sum;
 }
 
 /*
@@ -76,6 +75,34 @@ static int checksum(char *buffer, int length){
  */
 static PACKET* packetize(char *buffer, int length, int *count){
 
+	int num = length / MAX_PAYLOAD_LENGTH;
+	int endCheck = length % MAX_PAYLOAD_LENGTH;
+	if (endCheck) {
+		num++;
+	}
+	*count = num;
+
+	PACKET* returnArray = malloc(num * sizeof(PACKET));
+
+	int i;
+	for (i = 0; i < num; i++) {
+		returnArray[i].type = DATA;
+		returnArray[i].payload_length = MAX_PAYLOAD_LENGTH;
+		returnArray[i].checksum = checksum(buffer[MAX_PAYLOAD_LENGTH * i],
+			returnArray[i].payload_length);
+	}
+
+	returnArray[num - 1].type = LAST_DATA;
+	if (endCheck) {
+		returnArray[num - 1].payload_length = endCheck;
+	}
+
+	int j;
+	for (i = 0; i < num; i++) { 
+		returnArray[i].payload = buffer[MAX_PAYLOAD_LENGTH * i];
+		returnArray[i].checksum = checksum(returnArray[i].payload,
+			returnArray[i].payload_length);
+	}
 	/*  ----  FIXME  ----
 	 *  The goal is to turn the buffer into an array of packets.
 	 *  You should allocate the space for an array of packets and
