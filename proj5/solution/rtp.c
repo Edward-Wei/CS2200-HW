@@ -13,6 +13,9 @@
  #define DEBUG_PRINTFVAR(o, v) printf("")
 #endif
 
+// Philip Bale
+// 902985441
+
 /* GIVEN Function:
  * Handles creating the client's socket and determining the correct
  * information to communicate to the remote server
